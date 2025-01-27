@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee List</title>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: green;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <label for="titleSelect"><b>Title:</b></label>
+    <select id="titleSelect" onchange="displayEmployees()">
+        <option value="">Select Title</option>
+    </select>
+
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Employee Name</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        function loadXMLDoc(filename, callback) {
+            let xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    callback(this);
+                }
+            };
+            xhttp.open("GET", filename, true);
+            xhttp.send();
+        }
+
+        function parseXML(xml) {
+            let xmlDoc = xml.responseXML;
+            let employees = xmlDoc.getElementsByTagName("employee");
+            let titleSet = new Set();
+
+            for (let i = 0; i < employees.length; i++) {
+                let title = employees[i].getAttribute("title");
+                titleSet.add(title);
+            }
+
+            let select = document.getElementById("titleSelect");
+            titleSet.forEach(title => {
+                let option = document.createElement("option");
+                option.text = title;
+                option.value = title;
+                select.add(option);
+            });
+        }
+
+        function displayEmployees() {
+            let selectedTitle = document.getElementById("titleSelect").value;
+            let tableBody = document.getElementById("employeeTable").getElementsByTagName("tbody")[0];
+            tableBody.innerHTML = ""; // Clear previous data
+
+            loadXMLDoc("employees.xml", function(xml) {
+                let xmlDoc = xml.responseXML;
+                let employees = xmlDoc.getElementsByTagName("employee");
+
+                for (let i = 0; i < employees.length; i++) {
+                    if (employees[i].getAttribute("title") === selectedTitle) {
+                        let id = employees[i].getAttribute("id");
+                        let name = employees[i].getElementsByTagName("name")[0].textContent;
+                        let phone = employees[i].getElementsByTagName("phone")[0].textContent;
+
+                        let row = tableBody.insertRow();
+                        row.insertCell(0).textContent = id;
+                        row.insertCell(1).textContent = name;
+                        row.insertCell(2).textContent = phone;
+                    }
+                }
+            });
+        }
+
+        // Load XML and populate the dropdown on page load
+        window.onload = function() {
+            loadXMLDoc("employees.xml", parseXML);
+        };
+    </script>
+</body>
+</html>
